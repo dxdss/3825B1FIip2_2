@@ -6,34 +6,34 @@ labels:
   - label: 'lab0'
     sync: true
     matcher:
-      title: '*Лабораторная №0'
+      title: '.*Лабораторная №0'
       
   - label: 'lab1'
     sync: true
     matcher:
-      title: '*Лабораторная №1'
+      title: '.*Лабораторная №1'
       
   - label: 'lab2'
     sync: true
     matcher:
-      title: '*Лабораторная №2'
+      title: '.*Лабораторная №2'
       
   - label: 'lab3'
     sync: true
     matcher:
-      title: '*Лабораторная №3'
+      title: '.*Лабораторная №3'
       
   - label: 'lab4'
     sync: true
     matcher:
-      title: '*Лабораторная №5'
+      title: '.*Лабораторная №5'
       
   - label: 'lab6'
     sync: true
     matcher:
-      title: '*Лабораторная №6'
+      title: '.*Лабораторная №6'
       
   - label: 'lab7'
     sync: true
     matcher:
-      title: '*Лабораторная №7'
+      title: '.*Лабораторная №7'
