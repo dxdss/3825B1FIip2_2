@@ -41,7 +41,7 @@ class RationalNum {
 public:
 
 	//Конструктор + по умолчанию с сокращением и проверкой деления на 0.
-	RationalNum(int numerator_ = 0, unsigned int denominator_ = 1) :numerator(numerator_), denominator(denominator_) {
+	RationalNum(int numerator_ = 0, int denominator_ = 1) :numerator(denominator_ < 0 ? -1 * numerator_ : numerator_), denominator(denominator_<0? -1*denominator_:denominator_) {
 		if (sgn(denominator) != 0) {
 			reduce();
 		}
@@ -72,7 +72,7 @@ public:
 		cout << "#DIV/0!\n";
 	}
 	
-	//Я забыл как делать перегрузку вывода внутри класса, поэтому через friend.
+	//Перегрузка через friend.
 	friend ostream& operator << (ostream& os, const RationalNum& rn);
 };
 
@@ -98,7 +98,7 @@ int main() {
 	cout << a * b << '\n';
 	cout << a / b << '\n';
 	cout << a * RationalNum(10,3) << '\n';
-	cout << RationalNum(-14,10) << '\n';
+	cout << RationalNum(14,-10) << '\n';
 	b = a;
 	cout << b << '\n';
 
