@@ -12,7 +12,7 @@ class Product {
 private:
 	string barcode;
 	string name;
-	int price;
+	unsigned int price;
 	unsigned short discount;
 	bool valBarcode(const string& bar) {
 		if (bar.length() != 4 || bar == "0000") {
@@ -32,7 +32,7 @@ private:
 		return true;
 	}
 public:
-	Product(const string& bar, const string& nm, int p, short disc):name(nm), price(p){
+	Product(const string& bar, const string& nm, unsigned int p, unsigned short disc):name(nm), price(p){
 		if (valBarcode(bar)){
 			barcode = bar;
 		}
@@ -48,7 +48,7 @@ public:
 	}
 	string GetBarcode() const { return barcode; }
 	string GetName() const { return name; }
-	int GetPrice() const { return price; }
+	unsigned int GetPrice() const { return price; }
 	unsigned short GetDiscount() const { return discount; }
 	void print() const {
 		cout << "Barcode: " << barcode << '\n';
@@ -88,13 +88,13 @@ struct Check {
 };
 class Cashbox {
 private:
-	Warehouse whouse;
+	const Warehouse* whouse;
 	vector<Check> check;
 public:
-	Cashbox(const Warehouse& wh):whouse(wh){}
+	Cashbox(const Warehouse* wh):whouse(wh){}
 	//1
 	string scan_prod(const string& bar) {
-		int ind = whouse.find_prod(bar);
+		int ind = whouse->find_prod(bar);
 		if (ind == -1) {
 			cerr << "Product not found\n";
 			return "";
@@ -103,17 +103,17 @@ public:
 	}
 	//2
 	void scan_and_check(const string& bar) {
-		int ind = whouse.find_prod(bar);
+		int ind = whouse->find_prod(bar);
 		if (ind == -1) {
 			cerr << "Product not found\n";
 			return;
 		}
-		whouse.GetProduct(ind).print();
+		whouse->GetProduct(ind).print();
 	}
 	//3
 	void add_to_check(const string& bar, unsigned int qty) {
-		if (qty <= 0) {
-			cerr << "Error: Invalid quantity\n";
+		if (qty == 0) {
+			cerr << "Error: Quantity cannot be zero\n";
 			return;
 		}
 		for (size_t i = 0; i < check.size(); ++i) {
@@ -123,7 +123,7 @@ public:
 				return;
 			}
 		}
-		check.push_back({ whouse.GetProduct(whouse.find_prod(bar)), qty });
+		check.push_back({ whouse->GetProduct(whouse->find_prod(bar)), qty });
 		cout << "Added to check\n";
 	}
 	//4
@@ -135,18 +135,18 @@ public:
 		cout << "--- Check ---\n";
 		for (size_t i = 0; i < check.size(); ++i) {
 			const Product& prod = check[i].prod;
-			int qty = check[i].quantity;
+			unsigned int qty = check[i].quantity;
 			cout << "Name: " << prod.GetName() << "   " << "Price: " << prod.GetPrice() << " rub" << " Quantity: " << qty <<
 				" All price: " << prod.GetPrice() * qty << " rub\n";
 		}
 	}
 	//5
 	void calculate() const {
-		int TotalSum = 0, TotalDis = 0;
+		unsigned int TotalSum = 0, TotalDis = 0;
 		for (size_t i = 0; i < check.size(); ++i) {
 			const Product& prod = check[i].prod;
-			int qty = check[i].quantity;
-			int Sum = prod.GetPrice() * qty;
+			unsigned int qty = check[i].quantity;
+			unsigned int Sum = prod.GetPrice() * qty;
 			TotalSum += Sum;
 			TotalDis += Sum * prod.GetDiscount() / 100;
 		}
@@ -157,9 +157,9 @@ public:
 
 	}
 	//6
-	void delete_prod(const string& nm, unsigned int qty) {
+	void delete_prod(const string& bar, unsigned int qty) {
 		for (size_t i = 0; i < check.size(); ++i) {
-			if (check[i].prod.GetName() == nm) {
+			if (check[i].prod.GetBarcode() == bar) {
 				if (qty >= check[i].quantity) {
 					check.erase(check.begin() + i);
 				}
@@ -177,23 +177,54 @@ void InputClear() {
 	cin.clear();
 	cin.ignore(1000, '\n');
 }
+void menu() {
+	cout << "=== Electronic cashbox ===\n";
+	cout << "1.Scan\n";
+	cout << "2.Generate a check\n";
+	cout << "3.Total amount to be paid\n";
+	cout << "4.Delete product\n";
+	cout << "0.Exit\n";
+	cout << "Your choice: ";
+}
+void submenu(Cashbox& cashbox, string bar) {
+	int ch;
+	cout << "1.Product description\n";
+	cout << "2.Add data to the check\n";
+	cout << "0.Back\n";
+	cout << "Your choice: ";
+	while (!(cin >> ch)) {
+		InputClear();
+		cout << "Invalid input. Enter a number: ";
+	}
+	switch (ch) {
+	case 1: {
+		cout << "---Product information---\n";
+		cashbox.scan_and_check(bar);
+		break;
+	}
+	case 2: {
+		unsigned int qty;
+		cout << "Enter quantity: ";
+		cin >> qty;
+		InputClear();
+		cashbox.add_to_check(bar, qty);
+		break;
+	}
+	case 0:
+		return;
+	default: 
+		cout << "Incorrect selection. Try again\n";
+	}
+}
 int main() {
 	Warehouse wh;
 	int ch;
 	string bar;
 	unsigned int qty;
 	wh.init_prod();
-	Cashbox cashbox(wh);
+	Cashbox cashbox(&wh);
 	do {
-		cout << "=== Electronic cashbox ===\n";
-		cout << "1.Scan\n";
-		cout << "2.Product description\n";
-		cout << "3.Add data to the check\n";
-		cout << "4.Generate a check\n";
-		cout << "5.Total amount to be paid\n";
-		cout << "6.Delete product\n";
-		cout << "0.Exit\n";
-		cout << "Your choice: ";
+		menu();
 		while (!(cin >> ch)) {
 			InputClear();
 			cout << "Invalid input. Enter a number: ";
@@ -204,41 +235,21 @@ int main() {
 			cout << "Scan a barcode: ";
 			cin >> bar;
 			InputClear();
-			cashbox.scan_prod(bar);
+			submenu(cashbox, bar);
 			break;
 		}
 		case 2: {
-			cout << "Scan a barcode: ";
-			cin >> bar;
-			InputClear();
-			cout << "---Product information---\n";
-			cashbox.scan_and_check(bar);
-			break;
-		}
-		case 3: {
-			cout << "Scan a barcode: ";
-			cin >> bar;
-			InputClear();
-			if (cashbox.scan_prod(bar) != "") {
-				cout << "Enter quantity: ";
-				cin >> qty;
-				InputClear();
-				cashbox.add_to_check(bar, qty);
-			}
-			break;
-		}
-		case 4: {
 			cashbox.printCheck();
 			break;
 		}
-		case 5: {
+		case 3: {
 			cashbox.calculate();
 			break;
 		}
-		case 6: {
-			string name;
-			cout << "Enter product name: ";
-			cin >> name;
+		case 4: {
+			string barcode;
+			cout << "Enter product barcode: ";
+			cin >> barcode;
 			InputClear();
 			while (true) {
 				cout << "Enter quantity to delete: ";
@@ -249,7 +260,7 @@ int main() {
 				InputClear();
 			}
 			InputClear();
-			cashbox.delete_prod(name, qty);
+			cashbox.delete_prod(barcode, qty);
 			break;
 		}
 		case 0: 
