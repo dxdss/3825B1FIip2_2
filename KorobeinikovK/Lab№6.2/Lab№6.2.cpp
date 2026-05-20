@@ -7,13 +7,13 @@ using std::cin;
 using std::cout;
 using std::string;
 
-class GenerateNumber {
+class Game {
 private:
+	int bull;
+	int cow;
+	int Try;
 	string secret;
-	unsigned short n;
-public:
-	GenerateNumber(unsigned short len):n(len),secret("") {}
-	string gen_num() {
+	string gen_num(unsigned short n) {
 		string dig = "0123456789";
 		if (n < 1 || n > 10) {
 			return "";
@@ -25,7 +25,7 @@ public:
 			dig[j] = temp;
 		}
 		secret = dig.substr(0, n);
-		if (secret[0] == '0') {
+		if (secret[0] == '0' && n > 1) {
 			int ind = 1 + rand() % (n - 1);
 			char temp = secret[0];
 			secret[0] = secret[ind];
@@ -33,17 +33,9 @@ public:
 		}
 		return secret;
 	}
-};
-class Game {
-private:
-	int bull;
-	int cow;
-	int Try;
-	string secret;
 public:
 	Game(unsigned short n):bull(0), cow(0), Try(0) {
-		GenerateNumber gen(n);
-		secret = gen.gen_num();
+		gen_num(n);
 	}
 	void bulls_and_cows(const string& guess) {
 		bull = 0;
@@ -65,6 +57,9 @@ public:
 	}
 	bool validGuess(const string& guess) {
 		if (guess.length() != secret.length()) {
+			return false;
+		}
+		if (secret.length() > 1 && guess[0] == '0') {
 			return false;
 		}
 		for (size_t i = 0; i < guess.length(); ++i) {
@@ -106,7 +101,7 @@ int main() {
 		cin >> guess;
 		InputClear();
 		if (!BullsAndCows.validGuess(guess)) {
-			cout << "Invalid guess. Must be " << n << " unique digits.\n";
+			cout << "Invalid guess. Must be " << n << " unique digits, first digit not zero.\n";
 			continue;
 		}
 		BullsAndCows.bulls_and_cows(guess);
